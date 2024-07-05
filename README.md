@@ -1,11 +1,6 @@
 Survival prediction on breast cancer Whole Slide Images using clustering constrained attention based multiple instance learning (CLAM), Cox proportional hazards model and self supervised feature extraction (RetCCL). 
 
-Code References: 
-
-CLAM - https://doi.org/10.1038/s41551-020-00682-w
-RetCCL - https://doi.org/10.1016/j.media.2022.102645
-Cox-AMIL - https://doi.org/10.48550/arXiv.2212.07724
-Cox PH -  https://doi.org/10.1111/j.2517-6161.1972.tb00899.x
+Code References: CLAM (https://doi.org/10.1038/s41551-020-00682-w), RetCCL (https://doi.org/10.1016/j.media.2022.102645), Cox-AMIL (https://doi.org/10.48550/arXiv.2212.07724), Cox PH (https://doi.org/10.1111/j.2517-6161.1972.tb00899.x)
 
 Pipeline:
 
