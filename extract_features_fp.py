@@ -15,6 +15,7 @@ from utils.file_utils import save_hdf5
 from PIL import Image
 import h5py
 import openslide
+import ResNet as ResNet
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 def compute_w_loader(file_path, output_path, wsi, model,
@@ -84,8 +85,16 @@ if __name__ == '__main__':
 	os.makedirs(os.path.join(args.feat_dir, 'h5_files'), exist_ok=True)
 	dest_files = os.listdir(os.path.join(args.feat_dir, 'pt_files'))
 
-	print('loading model checkpoint')
-	model = resnet50_baseline(pretrained=True)
+	if args.premodel_type == "imagenet":
+		print("loading model checkpoint")
+		model = resnet50_baseline(pretrained=True)
+		
+	if args.premodel_type == "retccl":
+		model = ResNet.resnet50(num_classes=128, mlp=False, two_branch=False, normlinear=True)
+		pretext_model = torch.load('best_ckpt.pth', map_location= "cuda" if torch.cuda.is_available() else "cpu")
+		model.fc = nn.Identity()
+		model.load_state_dict(pretext_model, strict=True)
+
 	model = model.to(device)
 	
 	# print_network(model)
