@@ -72,14 +72,6 @@ def compute_from_patches(wsi_object, clam_pred=None, model=None, feature_extract
 
                 A = A.view(-1, 1).cpu().numpy()
                 
-                print("ALGHALKSGHALSGHSALSGHSLGHGASG")
-                print(A)
-                print(A.shape)
-                print(len(A))
-                print(ref_scores)
-                print(ref_scores.shape)
-                print(len(ref_scores))
-
                 if ref_scores is not None:
                     ref_scores_flat = ref_scores.flatten()
                     for score_idx in range(len(A)):
