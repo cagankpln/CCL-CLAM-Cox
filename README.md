@@ -8,7 +8,7 @@ cd cbtlab
 
 CREATE PATCHES:
 
-#Create "DATA_DIRECTORY" and "RESULTS_DIRECTORY" folders. Add "slide_" to the start of each data name in "DATA_DIRECTORY".
+#Create "DATA_DIRECTORY" and "RESULTS_DIRECTORY" folders. Add "slide_" to the start of each data name in "DATA_DIRECTORY" and name of the cohort after the svs number.
 
 python create_patches_fp.py --source DATA_DIRECTORY --save_dir RESULTS_DIRECTORY --patch_size 256 --seg --patch --stitch 
 
@@ -23,6 +23,10 @@ TRAINING SPLITS:
 #Change --k, --val_frac, --test_frac arguments. Create "dataset_csv" folder and inside, create "surv_pred.csv" according to the dataset (slide_id's should not contain .svs). Create "splits" folder.
 
 python create_splits_seq.py --task task_3_survival_prediction --seed 1 --k 1 --label_frac 1 --val_frac 0.2 --test_frac 0.2 --csv_path dataset_csv/surv_pred.csv
+
+#If custom splits are to be implemented, create "splits/custom_splits" folder.
+
+python custom_splits.py --splits_csv splits/custom_splits/splits_0.csv --val_frac 0.2 --data_slide_dir DATA_DIRECTORY
 
 TRAINING:
 
