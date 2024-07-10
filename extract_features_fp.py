@@ -68,6 +68,7 @@ parser.add_argument('--batch_size', type=int, default=256)
 parser.add_argument('--no_auto_skip', default=False, action='store_true')
 parser.add_argument('--custom_downsample', type=int, default=1)
 parser.add_argument('--target_patch_size', type=int, default=-1)
+parser.add_argument('--premodel_type', type=str, default="imagenet")
 args = parser.parse_args()
 
 
@@ -120,7 +121,7 @@ if __name__ == '__main__':
 		time_start = time.time()
 		wsi = openslide.open_slide(slide_file_path)
 		output_file_path = compute_w_loader(h5_file_path, output_path, wsi, 
-		model = model, batch_size = args.batch_size, verbose = 1, print_every = 20, 
+		model = model, batch_size = args.batch_size, verbose = 1, print_every = 1, 
 		custom_downsample=args.custom_downsample, target_patch_size=args.target_patch_size)
 		time_elapsed = time.time() - time_start
 		print('\ncomputing features for {} took {} s'.format(output_file_path, time_elapsed))
