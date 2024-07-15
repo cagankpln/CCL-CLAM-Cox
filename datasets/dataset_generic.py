@@ -8,6 +8,7 @@ import re
 import pdb
 import pickle
 from scipy import stats
+from collections import Counter
 
 from torch.utils.data import Dataset
 import h5py
@@ -101,7 +102,9 @@ class Generic_WSI_Classification_Dataset(Dataset):
 			if patient_voting == 'max':
 				label = label.max() # get patient label (MIL convention)
 			elif patient_voting == 'maj':
-				label = stats.mode(label)[0]
+				label_counts = Counter(label)
+				label = max(label_counts, key=label_counts.get)
+			
 			else:
 				raise NotImplementedError
 			patient_labels.append(label)
@@ -336,7 +339,7 @@ class Generic_MIL_Dataset(Generic_WSI_Classification_Dataset):
 
 		if not self.use_h5:
 			if self.data_dir:
-				full_path = os.path.join(data_dir, 'pt_files', '{}.pt'.format(slide_id))
+				full_path = os.path.join(data_dir, '{}.pt'.format(slide_id))
 				features = torch.load(full_path)
 				return features, label
 			

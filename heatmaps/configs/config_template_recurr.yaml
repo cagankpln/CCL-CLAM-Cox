@@ -2,13 +2,13 @@
 --- 
 exp_arguments:
   # number of classes
-  n_classes: 1
+  n_classes: 2
   # name tag for saving generated figures and assets
   save_exp_code: HEATMAP_OUTPUT 
   # where to save raw asset files
-  raw_save_dir: heatmaps/heatmap_raw_results
+  raw_save_dir: heatmaps/heatmap_raw_results_recurr
   # where to save final heatmaps
-  production_save_dir: heatmaps/heatmap_production_results
+  production_save_dir: heatmaps/heatmap_production_results_recurr
   batch_size: 512
 data_arguments: 
   # where is data stored; can be a single str path or a dictionary of key, data_dir mapping
@@ -16,15 +16,15 @@ data_arguments:
   # column name for key in data_dir (if a dict mapping is used)
   data_dir_key: source
   # csv list containing slide_ids (can additionally have seg/patch paramters, class labels, etc.)
-  process_list: surv_pred.csv
+  process_list: recurr_pred.csv
   # preset file for segmentation/patching
   preset:
   # file extention for slides
   slide_ext: .svs
   # label dictionary for str: interger mapping (optional)
   label_dict:
-    THY: 0
-    LYM: 1                        
+    low: 0
+    high: 1
 patching_arguments:
   # arguments for patching
   patch_size: 256
@@ -33,8 +33,8 @@ patching_arguments:
   custom_downsample: 1
 model_arguments: 
   # arguments for initializing model from checkpoint
-  ckpt_path: results/task_3_survival_prediction_clam_s1/s_0_checkpoint.pt
-  model_type: amil # see utils/eval_utils/
+  ckpt_path: results_recurr/recurrence_prediction_clam_s1/s_0_checkpoint.pt
+  model_type: clam_mb # see utils/eval_utils/
   initiate_fn: initiate_model # see utils/eval_utils/
   model_size: retccl_comp
   drop_out: true

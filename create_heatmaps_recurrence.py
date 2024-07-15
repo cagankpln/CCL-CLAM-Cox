@@ -11,8 +11,8 @@ import os
 import pandas as pd
 from utils.utils import *
 from math import floor
-from utils.eval_utils_survival import initiate_model as initiate_model
-from models.model_amil import AMIL
+from utils.eval_utils import initiate_model as initiate_model
+from models.model_clam import CLAM_MB, CLAM_SB
 from models.resnet_custom import resnet50_baseline
 from types import SimpleNamespace
 from collections import namedtuple
@@ -34,17 +34,27 @@ args = parser.parse_args()
 def infer_single_slide(model, features, label, reverse_label_dict, k=1):
 	features = features.to(device)
 	with torch.no_grad():
-		if isinstance(model, AMIL):
+		if isinstance(model, (CLAM_SB, CLAM_MB)):
 			model_results_dict = model(features)
-			risk, A, _= model(features)
+			logits, Y_prob, Y_hat, A, _ = model(features)
+			Y_hat = Y_hat.item()
 
-			risk = risk.item()
+			if isinstance(model, (CLAM_MB,)):
+				A = A[Y_hat]
+
 			A = A.view(-1, 1).cpu().numpy()
 
 		else:
 			raise NotImplementedError
 
-	return risk, A
+		print('Y_hat: {}, Y: {}, Y_prob: {}'.format(reverse_label_dict[Y_hat], label, ["{:.4f}".format(p) for p in Y_prob.cpu().flatten()]))	
+		
+		probs, ids = torch.topk(Y_prob, k)
+		probs = probs[-1].cpu().numpy()
+		ids = ids[-1].cpu().numpy()
+		preds_str = np.array([reverse_label_dict[idx] for idx in ids])
+
+	return ids, preds_str, probs, A
 
 def load_params(df_entry, params):
 	for key in params.keys():
@@ -106,9 +116,9 @@ if __name__ == '__main__':
 
 	
 	preset = data_args.preset
-	def_seg_params = {'seg_level': -1, 'sthresh': 15, 'mthresh': 11, 'close': 2, 'use_otsu': False, 
+	def_seg_params = {'seg_level': -1, 'sthresh': 8, 'mthresh': 7, 'close': 2, 'use_otsu': False, 
 					  'keep_ids': 'none', 'exclude_ids':'none'}
-	def_filter_params = {'a_t':50.0, 'a_h': 8.0, 'max_n_holes':10}
+	def_filter_params = {'a_t':5, 'a_h': 16.0, 'max_n_holes':8}
 	def_vis_params = {'vis_level': -1, 'line_thickness': 250}
 	def_patch_params = {'use_padding': True, 'contour_fn': 'four_pt'}
 
@@ -152,16 +162,10 @@ if __name__ == '__main__':
 	print('\nckpt path: {}'.format(ckpt_path))
 	
 	if model_args.initiate_fn == 'initiate_model':
-		settings = {
-			'drop_out': model_args.drop_out,
-			'model_type': model_args.model_type,
-			'model_size': model_args.model_size,
-			'print_model_info': False
-			}
-		model =  initiate_model(settings, model_args.ckpt_path)
+		model =  initiate_model(model_args, ckpt_path)
 	else:
 		raise NotImplementedError
-
+	
 	if model_args.premodel_type == "imagenet":
 		feature_extractor = resnet50_baseline(pretrained=True)
 		feature_extractor.eval()
@@ -176,11 +180,6 @@ if __name__ == '__main__':
 		feature_extractor.eval()
 		device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
 		print("Done!")
-
-	""" feature_extractor = resnet50_baseline(pretrained=True)
-	feature_extractor.eval()
-	device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
-	print('Done!') """
 
 	label_dict =  data_args.label_dict
 	class_labels = list(label_dict.keys())
@@ -296,7 +295,7 @@ if __name__ == '__main__':
 	
 
 		##### check if h5_features_file exists ######
-		if not os.path.isfile(h5_path) :
+		if not os.path.isfile(h5_path):
 			_, _, wsi_object = compute_from_patches(wsi_object=wsi_object, 
 											model=model, 
 											feature_extractor=feature_extractor, 
@@ -316,7 +315,7 @@ if __name__ == '__main__':
 		process_stack.loc[i, 'bag_size'] = len(features)
 		
 		wsi_object.saveSegmentation(mask_file)
-		risk, A = infer_single_slide(model, features, label, reverse_label_dict, exp_args.n_classes)
+		Y_hats, Y_hats_str, Y_probs, A = infer_single_slide(model, features, label, reverse_label_dict, exp_args.n_classes)
 		del features
 		
 		if not os.path.isfile(block_map_save_path): 
@@ -326,14 +325,16 @@ if __name__ == '__main__':
 			asset_dict = {'attention_scores': A, 'coords': coords}
 			block_map_save_path = save_hdf5(block_map_save_path, asset_dict, mode='w')
 		
-		# save predictions
-		process_stack.loc[i, 'risk'] = risk
+		# save top 3 predictions
+		for c in range(exp_args.n_classes):
+			process_stack.loc[i, 'Pred_{}'.format(c)] = Y_hats_str[c]
+			process_stack.loc[i, 'p_{}'.format(c)] = Y_probs[c]
 
-		os.makedirs('heatmaps/results_surv/', exist_ok=True)
+		os.makedirs('heatmaps/results_recurr/', exist_ok=True)
 		if data_args.process_list is not None:
-			process_stack.to_csv('heatmaps/results_surv/{}.csv'.format(data_args.process_list.replace('.csv', '')), index=False)
+			process_stack.to_csv('heatmaps/results_recurr/{}.csv'.format(data_args.process_list.replace('.csv', '')), index=False)
 		else:
-			process_stack.to_csv('heatmaps/results_surv/{}.csv'.format(exp_args.save_exp_code), index=False)
+			process_stack.to_csv('heatmaps/results_recurr/{}.csv'.format(exp_args.save_exp_code), index=False)
 		
 		file = h5py.File(block_map_save_path, 'r')
 		dset = file['attention_scores']
@@ -345,7 +346,7 @@ if __name__ == '__main__':
 		samples = sample_args.samples
 		for sample in samples:
 			if sample['sample']:
-				tag = "label_{}_risk_{}".format(label, risk)
+				tag = "label_{}_pred_{}".format(label, Y_hats[0])
 				sample_save_dir =  os.path.join(exp_args.production_save_dir, exp_args.save_exp_code, 'sampled_patches', str(tag), sample['name'])
 				os.makedirs(sample_save_dir, exist_ok=True)
 				print('sampling {}'.format(sample['name']))
@@ -377,7 +378,7 @@ if __name__ == '__main__':
 			ref_scores = None
 		
 		if heatmap_args.calc_heatmap:
-			compute_from_patches(wsi_object=wsi_object, clam_pred=None, model=model, feature_extractor=feature_extractor, batch_size=exp_args.batch_size, **wsi_kwargs, 
+			compute_from_patches(wsi_object=wsi_object, clam_pred=Y_hats[0], model=model, feature_extractor=feature_extractor, batch_size=exp_args.batch_size, **wsi_kwargs, 
 								attn_save_path=save_path,  ref_scores=ref_scores)
 
 		if not os.path.isfile(save_path):
@@ -400,13 +401,11 @@ if __name__ == '__main__':
 		if heatmap_args.use_ref_scores:
 			heatmap_vis_args['convert_to_percentiles'] = False
 
-		# heatmap_save_name = '{}_{}_roi_{}_blur_{}_rs_{}_bc_{}_a_{}_l_{}_bi_{}_{}.{}'.format(slide_id, float(patch_args.overlap), int(heatmap_args.use_roi),
-		# 																				int(heatmap_args.blur), 
-		# 																				int(heatmap_args.use_ref_scores), int(heatmap_args.blank_canvas), 
-		# 																				float(heatmap_args.alpha), int(heatmap_args.vis_level), 
-		# 																				int(heatmap_args.binarize), float(heatmap_args.binary_thresh), heatmap_args.save_ext)
-
-		heatmap_save_name = '{}_heatmap_risk{:.4f}_label{}.{}'.format(slide_id, risk, label, heatmap_args.save_ext)
+		heatmap_save_name = '{}_{}_roi_{}_blur_{}_rs_{}_bc_{}_a_{}_l_{}_bi_{}_{}.{}'.format(slide_id, float(patch_args.overlap), int(heatmap_args.use_roi),
+																						int(heatmap_args.blur), 
+																						int(heatmap_args.use_ref_scores), int(heatmap_args.blank_canvas), 
+																						float(heatmap_args.alpha), int(heatmap_args.vis_level), 
+																						int(heatmap_args.binarize), float(heatmap_args.binary_thresh), heatmap_args.save_ext)
 
 
 		if os.path.isfile(os.path.join(p_slide_save_dir, heatmap_save_name)):

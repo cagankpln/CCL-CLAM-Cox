@@ -26,7 +26,8 @@ parser.add_argument('--task', type=str, choices=[
     'task_7_tumor_grading_kat2_augmented',
     'task_7_tumor_grading_kat4_augmented',
     'task_8_tumor_subtyping_augmented',
-    'task_9_survival_prediction_augmented_random'])
+    'task_9_survival_prediction_augmented_random',
+    "recurrence_prediction"])
 parser.add_argument('--csv_path', type=str, default=None, help='Path to csv dataset.')
 parser.add_argument('--split_name', type=str, default=None, help='Name of split folder.')
 parser.add_argument('--val_frac', type=float, default= 0.1,
@@ -228,6 +229,17 @@ elif args.task == 'task_9_survival_prediction_augmented_random':
                         label_col = 'Survival_Status',
                         patient_strat=True,
                         ignore=[])
+    
+elif args.task == 'recurrence_prediction':
+    args.n_classes=2
+    dataset = Generic_WSI_Classification_Dataset(csv_path = args.csv_path,
+                            shuffle = False, 
+                            seed = args.seed, 
+                            print_info = True,
+                            label_dict = {'low':0, 'high':1},
+                            patient_strat= True,
+                            patient_voting='maj',
+                            ignore=[])
 
 
 else:
