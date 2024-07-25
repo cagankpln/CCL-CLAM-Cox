@@ -4,7 +4,7 @@ Code References: CLAM (https://doi.org/10.1038/s41551-020-00682-w), RetCCL (http
 
 Pipeline:
 
-#NOTE: If you are on a windows machine, please see wsi_core/WholeSlideImage.py, extract_features_fp.py and vis_utils/heatmap_utils.py scripts and change the necessary places as instructed. Also please make sure to create an environment according to the environment.yml file.
+#NOTE: If you are on a windows machine, please see "wsi_core/WholeSlideImage.py", "extract_features_fp.py" and "vis_utils/heatmap_utils.py" scripts and change the necessary places as instructed. Also please make sure to create an environment according to the "environment.yml" file.
 
 cd CCL-CLAM-Cox
 
@@ -42,11 +42,11 @@ python main_recurrence.py --drop_out --early_stopping --lr 2e-4 --k 1 --label_fr
 
 HEATMAP:
 
-#For survival prediction: Create "process_lists" folder inside "heatmaps" folder and copy "surv_pred.csv" from "dataset_csv" to there. In the heatmaps/configs/config_template_surv.yml file, change "model_size" argument from "small" to "retccl_comp" and change "premodel_type" argument from "imagenet" to "retccl" in order to use the RetCCL compatible model. Change "model_type" argument from "clam_mb" to "amil".
+#For survival prediction: Create "process_lists" folder inside "heatmaps" folder and copy "surv_pred.csv" from "dataset_csv" to there. In the "heatmaps/configs/config_template_surv.yml" file, change "model_size" argument from "small" to "retccl_comp" and change "premodel_type" argument from "imagenet" to "retccl" in order to use the RetCCL compatible model. Change "model_type" argument from "clam_mb" to "amil".
 
 python create_heatmaps_survival.py --config config_template_surv.yaml
 
-#For recurrence prediction: Create "process_lists" folder inside "heatmaps" folder and copy "recurr_pred.csv" from "dataset_csv" to there. In the heatmaps/configs/config_template_recurr.yml file, change "model_size" argument from "small" to "retccl_comp" and change "premodel_type" argument from "imagenet" to "retccl" in order to use the RetCCL compatible model.
+#For recurrence prediction: Create "process_lists" folder inside "heatmaps" folder and copy "recurr_pred.csv" from "dataset_csv" to there. In the "heatmaps/configs/config_template_recurr.yml" file, change "model_size" argument from "small" to "retccl_comp" and change "premodel_type" argument from "imagenet" to "retccl" in order to use the RetCCL compatible model.
 
 python create_heatmaps_recurrence.py --config config_template_recurr.yaml
 
