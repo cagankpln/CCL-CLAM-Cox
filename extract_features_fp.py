@@ -14,9 +14,20 @@ from utils.utils import print_network, collate_features
 from utils.file_utils import save_hdf5
 from PIL import Image
 import h5py
-import openslide
+import openslide #comment if on a windows machine
 import ResNet as ResNet
+from torchvision import transforms
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+
+#use this if on a windows machine
+""" OPENSLIDE_PATH = r'C:\Users\AI\openslide-bin-4.0.0.3-windows-x64\bin'
+if hasattr(os, 'add_dll_directory'):
+    with os.add_dll_directory(OPENSLIDE_PATH):
+        import openslide
+else:
+    import openslide """
+
 
 def compute_w_loader(file_path, output_path, wsi, model,
  	batch_size = 8, verbose = 0, print_every=20, pretrained=True, 
@@ -35,7 +46,7 @@ def compute_w_loader(file_path, output_path, wsi, model,
 	dataset = Whole_Slide_Bag_FP(file_path=file_path, wsi=wsi, pretrained=pretrained, 
 		custom_downsample=custom_downsample, target_patch_size=target_patch_size)
 	x, y = dataset[0]
-	kwargs = {'num_workers': 4, 'pin_memory': True} if device.type == "cuda" else {}
+	kwargs = {'num_workers': 4, 'pin_memory': True} if device.type == "cuda" else {} #change num_workers from 4 to 0 if on a windows machine
 	loader = DataLoader(dataset=dataset, batch_size=batch_size, **kwargs, collate_fn=collate_features)
 
 	if verbose > 0:
