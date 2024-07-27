@@ -4,7 +4,7 @@ Code References: CLAM (https://doi.org/10.1038/s41551-020-00682-w), RetCCL (http
 
 Pipeline:
 
-#NOTE: If you are on a windows machine, please see "wsi_core/WholeSlideImage.py", "extract_features_fp.py" and "vis_utils/heatmap_utils.py" scripts and change the necessary places as instructed. Also please make sure to create an environment according to the "environment.yml" file.
+#Please make sure to create an environment according to the "environment.yml" file. If you are on a windows machine, please see "wsi_core/WholeSlideImage.py", "extract_features_fp.py" and "vis_utils/heatmap_utils.py" scripts and change the necessary places as instructed.
 
 cd CCL-CLAM-Cox
 
